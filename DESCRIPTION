@@ -1,0 +1,14 @@
+Package: SSNoiseReduction
+Title: Automatic audio noise reduction using spectral subtraction
+Version: 0.1
+Authors@R: 
+    person(given = "Akinori",
+           family = "Ito",
+           role = c("aut", "cre"),
+           email = "aito@fw.ipsj.or.jp")
+Description: Automatically reduce noise from a Wave object of speech data.
+License: LGPL-3.0
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.0
+Imports: tuneR, vadeR, audio2specgram
