@@ -25,8 +25,8 @@ subspec <- function(sigspec,noisespec,alpha,beta) {
 #' @importFrom audio2specgram audio2specgram specgram2audio sinewin
 #' @export SSNoiseReduction
 
-SSNoiseReduction <- function(x,windowWidth=0.02,alpha=1,beta=0.001) {
-  winlen <- as.integer(x@samp.rate*windowWidth)
+SSNoiseReduction <- function(x,windowWidth=0.02,alpha=1,beta=0.001,simple=TRUE,nclust=4) {
+  winlen <- as.integer(x@samp.rate*windowwidth)
   if (winlen %% 2 == 1) {
     winlen <- winlen+1
   }
@@ -34,7 +34,15 @@ SSNoiseReduction <- function(x,windowWidth=0.02,alpha=1,beta=0.001) {
   nshift <- winlen/2
 
 # VAD
-  vad <- voiceActivity(channel(x,"left"))
+  minlen <- 16
+  repeat {
+    vad <- voiceActivity(channel(x,"left"),simple=simple,frameshift=windowwidth/2,nclust=nclust,minlen=minlen)
+    if (length(vad) != sum(vad)) {
+      # silent segment found
+      break
+    }
+    minlen <- as.integer(minlen/2)
+  }
 
 # convert to spectrogram
   conf <- stftconfig(winlen,nshift,sinewin,sinewin)
