@@ -25,7 +25,7 @@ subspec <- function(sigspec,noisespec,alpha,beta) {
 #' @importFrom audio2specgram audio2specgram specgram2audio sinewin
 #' @export SSNoiseReduction
 
-SSNoiseReduction <- function(x,windowWidth=0.02,alpha=1,beta=0.001,simple=TRUE,nclust=4) {
+SSNoiseReduction <- function(x,windowwidth=0.02,alpha=1,beta=0.001,simple=TRUE,nclust=4) {
   winlen <- as.integer(x@samp.rate*windowwidth)
   if (winlen %% 2 == 1) {
     winlen <- winlen+1
