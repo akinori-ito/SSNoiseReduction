@@ -25,7 +25,7 @@ subspec <- function(sigspec,noisespec,alpha,beta) {
 #' @importFrom audio2specgram audio2specgram specgram2audio sinewin
 #' @export SSNoiseReduction
 
-SSNoiseReduction <- function(x,windowwidth=0.02,alpha=1,beta=0.001,simple=TRUE,nclust=4) {
+SSNoiseReduction <- function(x,windowwidth=0.02,alpha=1,beta=0.001,simple=TRUE,nclust=4,do_normalize=FALSE) {
   winlen <- as.integer(x@samp.rate*windowwidth)
   if (winlen %% 2 == 1) {
     winlen <- winlen+1
@@ -36,7 +36,7 @@ SSNoiseReduction <- function(x,windowwidth=0.02,alpha=1,beta=0.001,simple=TRUE,n
 # VAD
   minlen <- 16
   repeat {
-    vad <- voiceActivity(channel(x,"left"),simple=simple,frameshift=windowwidth/2,nclust=nclust,minlen=minlen)
+    vad <- vadeR::voiceActivity(channel(x,"left"),simple=simple,frameshift=windowwidth/2,nclust=nclust,minlen=minlen)
     if (length(vad) != sum(vad)) {
       # silent segment found
       break
@@ -45,8 +45,8 @@ SSNoiseReduction <- function(x,windowwidth=0.02,alpha=1,beta=0.001,simple=TRUE,n
   }
 
 # convert to spectrogram
-  conf <- stftconfig(winlen,nshift,sinewin,sinewin)
-  spec <- audio2specgram(x@left,conf)
+  conf <- audio2specgram::stftconfig(winlen,nshift,sinewin,sinewin)
+  spec <- audio2specgram::audio2specgram(x@left,conf)
   pspec <- Re(spec*Conj(spec))
   aspec <- spec/(sqrt(pspec)+0.000001)
 # noise configuration
@@ -60,7 +60,18 @@ SSNoiseReduction <- function(x,windowwidth=0.02,alpha=1,beta=0.001,simple=TRUE,n
   aspec <- aspec*sqrt(pspec)
 
 # back to time sequence
-  y <- specgram2audio(aspec,conf)
+  y <- audio2specgram::specgram2audio(aspec,conf)
+# normalize of needed
+  if (do_normalize) {
+    vframes <- vadeR::voiceSegment(vad)
+    to_max <- 2^(x@bit-1)
+    for (i in 1:nrow(vframes)) {
+      spos <- vframes$begin[i]*x@samp.rate/100
+      epos <- vframes$end[i]*x@samp.rate/100
+      cur_max <- max(abs(y[spos:epos]))
+      y[spos:epos] <- y[spos:epos]/cur_max*to_max
+    }
+  }
   Wave(y,samp.rate=x@samp.rate,bit=x@bit)
 }
 
